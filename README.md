@@ -1,3 +1,5 @@
+![Flutter](https://img.shields.io/badge/Flutter-%2302569B.svg?style=for-the-badge&logo=Flutter&logoColor=white) ![Android](https://img.shields.io/badge/Android-3DDC84?style=for-the-badge&logo=android&logoColor=white) ![Apple](https://img.shields.io/badge/Apple-%23000000.svg?style=for-the-badge&logo=apple&logoColor=white) 
+
 # Tic Tac Toe App
 
 This is a Tic Tac Toe game application built using Flutter with light and dark themes, featuring faster state management using GetX library.
@@ -12,8 +14,8 @@ This is a Tic Tac Toe game application built using Flutter with light and dark t
 
 ## Screenshots
 
-![Screenshot1](screenshots/screenshot1.png)
-![Screenshot2](screenshots/screenshot2.png)
+<img src="screenshots/screenshot1.png" width="300"> <img src="screenshots/screenshot2.png" width="300">
+
 
 ## Installation
 
@@ -45,7 +47,7 @@ This is a Tic Tac Toe game application built using Flutter with light and dark t
 
 - Launch the app to see the home page.
 - Choose the theme (light/dark) from the settings.
-- Click on the "Start Game" button to play.
+- Click on the "Play" button to Start Game.
 - Tap on the cells to make your moves.
 - Use the reset button to restart the game at any time.
 
