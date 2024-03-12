@@ -12,8 +12,8 @@ This is a Tic Tac Toe game application built using Flutter with light and dark t
 
 ## Screenshots
 
-![Screenshot1](screenshots/screenshot1.png)
-![Screenshot2](screenshots/screenshot2.png)
+<img src="screenshots/screenshot1.png" width="300"> <img src="screenshots/screenshot2.png" width="300">
+
 
 ## Installation
 
