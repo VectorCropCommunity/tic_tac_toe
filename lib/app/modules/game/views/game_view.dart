@@ -136,6 +136,15 @@ class GameView extends GetView<GameController> {
                     },
                   ),
                 ),
+                const Align(
+                  alignment: Alignment.bottomCenter,
+                  child: Padding(
+                    padding: EdgeInsets.all(20.0),
+                    child: Text(
+                      "vectorcrop.com",
+                    ),
+                  ),
+                )
               ],
             ),
           ),
