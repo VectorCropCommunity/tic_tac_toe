@@ -22,7 +22,7 @@ This is a Tic Tac Toe game application built using Flutter with light and dark t
 1. Clone the repository:
 
    ```
-   git clone https://github.com/your_username/tic_tac_toe_app.git
+   git clone https://github.com/VectorCropCommunity/tic_tac_toe.git
    ```
 
 2. Navigate into the project directory:
