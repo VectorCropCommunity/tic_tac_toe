@@ -63,3 +63,7 @@ Contributions are welcome! Feel free to submit pull requests or open an issue fo
 ## License
 
 [MIT License](LICENSE)
+
+## Download by paying 😂
+
+https://play.google.com/store/apps/details?id=com.vectorcrop.guess_game
