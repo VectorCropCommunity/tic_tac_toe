@@ -28,7 +28,7 @@ This is a Tic Tac Toe game application built using Flutter with light and dark t
 2. Navigate into the project directory:
 
    ```
-   cd tic_tac_toe_app
+   cd tic_tac_toe
    ```
 
 3. Install dependencies:
