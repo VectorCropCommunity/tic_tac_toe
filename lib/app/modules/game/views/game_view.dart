@@ -16,13 +16,13 @@ class GameView extends GetView<GameController> {
         elevation: 0,
         actions: [
           Obx(() => Container(
-                margin: EdgeInsets.all(10),
+                margin: const EdgeInsets.all(10),
                 child: controller.oRrefresh.value
                     ? IconButton(
                         onPressed: () {
                           controller.resetGame();
                         },
-                        icon: Icon(Icons.refresh))
+                        icon: const Icon(Icons.refresh))
                     : Container(),
               ))
         ],
@@ -35,7 +35,6 @@ class GameView extends GetView<GameController> {
             child: Column(
               children: [
 // Player Selection
-
                 Expanded(
                   flex: 1,
                   child: Obx(
@@ -83,18 +82,24 @@ class GameView extends GetView<GameController> {
 
                 Expanded(
                   flex: 3,
-                  child: GridView.builder(
-                    itemCount: 9,
-                    gridDelegate:
-                        const SliverGridDelegateWithFixedCrossAxisCount(
-                            crossAxisCount: 3),
-                    itemBuilder: (BuildContext context, index) {
+                  // child: GridView.builder(
+                  //   itemCount: 9,
+                  //   gridDelegate:
+                  //       const SliverGridDelegateWithFixedCrossAxisCount(
+                  //           crossAxisCount: 3),
+                  //   itemBuilder:
+                  // ),
+                  child: AnimatedGrid(
+                    initialItemCount: 9,
+                    itemBuilder: (BuildContext context, index, value) {
                       return Obx(
                         () => GestureDetector(
                           onTap: () {
                             controller.onTapped(index);
                           },
-                          child: Container(
+                          child: AnimatedContainer(
+                            duration: const Duration(seconds: 1),
+                            curve: Curves.bounceIn,
                             margin: const EdgeInsets.all(8),
                             decoration: BoxDecoration(
                                 shape: BoxShape.rectangle,
@@ -134,6 +139,9 @@ class GameView extends GetView<GameController> {
                         ),
                       );
                     },
+                    gridDelegate:
+                        const SliverGridDelegateWithFixedCrossAxisCount(
+                            crossAxisCount: 3),
                   ),
                 ),
                 const Align(

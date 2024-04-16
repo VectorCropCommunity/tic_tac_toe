@@ -24,6 +24,9 @@ class GameController extends GetxController {
 
   @override
   void onClose() {
+    if (Get.isSnackbarOpen) {
+      Get.closeAllSnackbars();
+    }
     super.onClose();
   }
 
@@ -94,7 +97,6 @@ class GameController extends GetxController {
   }
 
   void checkToRefresh() {
-
     if (winner.value != '' || filledBox.value == 9) {
       oRrefresh.value = true;
       showReset();
