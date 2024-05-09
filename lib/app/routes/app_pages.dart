@@ -20,7 +20,7 @@ class AppPages {
     ),
     GetPage(
       name: _Paths.GAME,
-      page: () => const GameView(),
+      page: () =>  GameView(),
       binding: GameBinding(),
     ),
   ];
