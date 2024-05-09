@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 
 import 'package:get/get.dart';
-import 'package:tic_tac_toe/main.dart';
 
 import '../controllers/game_controller.dart';
 
@@ -15,16 +14,15 @@ class GameView extends GetView<GameController> {
         backgroundColor: Colors.transparent,
         elevation: 0,
         actions: [
-          Obx(() => Container(
-                margin: const EdgeInsets.all(10),
-                child: controller.oRrefresh.value
-                    ? IconButton(
-                        onPressed: () {
-                          controller.resetGame();
-                        },
-                        icon: const Icon(Icons.refresh))
-                    : Container(),
-              ))
+          Container(
+            margin: const EdgeInsets.all(10),
+            child: IconButton(
+              onPressed: () {
+                controller.resetGame();
+              },
+              icon: const Icon(Icons.refresh),
+            ),
+          )
         ],
       ),
       body: Stack(
@@ -42,38 +40,23 @@ class GameView extends GetView<GameController> {
                       onTap: () {
                         // controller.showReset();
                       },
-                      child: Container(
+                      child: AnimatedContainer(
+                        duration: const Duration(milliseconds: 1000),
+                        curve: Curves.bounceIn,
                         width: double.infinity,
                         margin: const EdgeInsets.all(8),
                         decoration: BoxDecoration(
                             shape: BoxShape.rectangle,
                             color: controller.oTurn.value
-                                ? Theme.of(context).hintColor
-                                : !controller.oTurn.value
-                                    ? Theme.of(context).primaryColor
-                                    : Colors.grey[900],
+                                ? Get.theme.primaryColorDark
+                                : Get.theme.primaryColorLight,
                             borderRadius: BorderRadius.circular(10)),
                         child: Center(
-                          child: !controller.oRrefresh.value
-                              ? Text(
-                                  controller.oTurn.value
-                                      ? "O's Turn"
-                                      : "X's Turn",
-                                  style: const TextStyle(
-                                      fontSize: 40,
-                                      fontWeight: FontWeight.bold),
-                                )
-                              : Text(
-                                  controller.winner.value == "X"
-                                      ? "Winner is ${controller.winner.value}"
-                                      : controller.winner.value == "O"
-                                          ? "Winner is ${controller.winner.value}"
-                                          : "Reset Game",
-                                  style: const TextStyle(
-                                      fontSize: 40,
-                                      fontWeight: FontWeight.bold),
-                                ),
-                        ),
+                            child: Text(
+                          controller.headingText.value,
+                          style: const TextStyle(
+                              fontSize: 40, fontWeight: FontWeight.bold),
+                        )),
                       ),
                     ),
                   ),
@@ -82,13 +65,6 @@ class GameView extends GetView<GameController> {
 
                 Expanded(
                   flex: 3,
-                  // child: GridView.builder(
-                  //   itemCount: 9,
-                  //   gridDelegate:
-                  //       const SliverGridDelegateWithFixedCrossAxisCount(
-                  //           crossAxisCount: 3),
-                  //   itemBuilder:
-                  // ),
                   child: AnimatedGrid(
                     initialItemCount: 9,
                     itemBuilder: (BuildContext context, index, value) {
@@ -103,9 +79,14 @@ class GameView extends GetView<GameController> {
                             margin: const EdgeInsets.all(8),
                             decoration: BoxDecoration(
                                 shape: BoxShape.rectangle,
-                                color: themeController.isLightTheme.value
-                                    ? Colors.grey[300]
-                                    : Colors.grey[900],
+                                color: controller.list[index] == 'X'
+                                    ? Get.theme.primaryColorLight
+                                    : controller.list[index] == 'O'
+                                        ? Get.theme.primaryColorDark
+                                        : controller.matchedIndex
+                                                .contains(index)
+                                            ? Colors.white.withOpacity(0.8)
+                                            : Colors.grey.withOpacity(0.3),
                                 borderRadius: BorderRadius.circular(8)),
                             child: Stack(
                               fit: StackFit.expand,
@@ -117,22 +98,15 @@ class GameView extends GetView<GameController> {
                                         fontSize: 60,
                                         fontWeight: FontWeight.bold,
                                         color: controller.list[index] == 'X'
-                                            ? Theme.of(context).primaryColor
-                                            : Theme.of(context).hintColor),
+                                            ? Get.theme.primaryColorLight
+                                            : Get.theme.primaryColorDark),
                                   ),
                                 ),
-                                controller.matchedIndex.contains(index)
-                                    ? Transform.rotate(
-                                        origin: Offset.zero,
-                                        angle: controller.angle.value,
-                                        child: Image.asset(
-                                          "./assets/images/line.png",
-                                          fit: BoxFit.cover,
-                                          color:
-                                              Theme.of(context).highlightColor,
-                                        ),
-                                      )
-                                    : Container()
+                                if (controller.matchedIndex.contains(index))
+                                  AnimatedContainer(
+                                    duration: const Duration(seconds: 1),
+                                    color: Colors.white.withOpacity(0.7),
+                                  )
                               ],
                             ),
                           ),

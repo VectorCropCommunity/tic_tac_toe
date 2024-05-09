@@ -3,23 +3,29 @@ import 'package:get/get.dart';
 
 class GameController extends GetxController {
   RxBool oTurn = true.obs;
-  List<String> list = ['', '', '', '', '', '', '', '', ''].obs;
   RxString winner = ''.obs;
-  List matchedIndex = [].obs;
-  RxString headingText = "".obs;
+  List<String> list = List.filled(9, '').obs;
+  List<int> matchedIndex = <int>[].obs;
+  RxString headingText = ''.obs;
   RxInt filledBox = 0.obs;
-  RxBool oRrefresh = false.obs;
-  RxDouble angle = 0.0.obs;
+  RxBool isRefreshNeeded = false.obs;
 
-  final count = 0.obs;
+  final List<List<int>> winningCombinations = [
+    [0, 1, 2], // Rows
+    [3, 4, 5],
+    [6, 7, 8],
+    [0, 3, 6], // Columns
+    [1, 4, 7],
+    [2, 5, 8],
+    [0, 4, 8], // Diagonals
+    [6, 4, 2],
+  ];
+
   @override
   void onInit() {
+    headingText.value = oTurn.value ? "O's Turn" : "X's Turn";
+    winner.value = '';
     super.onInit();
-  }
-
-  @override
-  void onReady() {
-    super.onReady();
   }
 
   @override
@@ -30,120 +36,80 @@ class GameController extends GetxController {
     super.onClose();
   }
 
-  void increment() => count.value++;
-
   void onTapped(int index) {
+    // heading text
+    headingText.value = !oTurn.value ? "O's Turn" : "X's Turn";
     if (winner.value == '' && filledBox.value != 9) {
-      if (oTurn.value == true && list[index] == '') {
-        oTurn.value = false;
+      if (oTurn.value && list[index] == '') {
         list[index] = 'O';
-        filledBox++;
-      } else if (oTurn.value == false && list[index] == '') {
+      } else if (!oTurn.value && list[index] == '') {
         list[index] = 'X';
-        oTurn.value = true;
-        filledBox++;
       }
+      oTurn.value = !oTurn.value;
+      filledBox++;
     }
 
-    checkWinner();
+    checkForWinner();
 
     if (filledBox.value == 9 && winner.value == '') {
-      print("no Winner");
-    }
-  }
-
-  void checkWinner() {
-    if (list[0] == list[1] && list[0] == list[2] && list[0] != '') {
-      winner.value = list[0];
-      matchedIndex = [0, 1, 2];
-      angle.value = 0;
-    }
-    if (list[3] == list[4] && list[3] == list[5] && list[3] != '') {
-      winner.value = list[3];
-      matchedIndex = [3, 4, 5];
-      angle.value = 0;
-    }
-    if (list[6] == list[7] && list[6] == list[8] && list[6] != '') {
-      winner.value = list[6];
-      matchedIndex = [6, 7, 8];
-      angle.value = 0;
-    }
-    if (list[0] == list[3] && list[0] == list[6] && list[0] != '') {
-      winner.value = list[1];
-      matchedIndex = [0, 3, 6];
-      angle.value = 7.86;
-    }
-    if (list[1] == list[4] && list[1] == list[7] && list[1] != '') {
-      winner.value = list[1];
-      matchedIndex = [1, 4, 7];
-      angle.value = 7.86;
-    }
-    if (list[2] == list[5] && list[2] == list[8] && list[2] != '') {
-      winner.value = list[2];
-      matchedIndex = [2, 5, 8];
-      angle.value = 7.86;
-    }
-    if (list[0] == list[4] && list[0] == list[8] && list[0] != '') {
-      winner.value = list[0];
-      matchedIndex = [0, 4, 8];
-      angle.value = 4;
-    }
-    if (list[6] == list[4] && list[6] == list[2] && list[6] != '') {
-      winner.value = list[6];
-      matchedIndex = [6, 4, 2];
-      angle.value = -4;
-    }
-    checkToRefresh();
-  }
-
-  void checkToRefresh() {
-    if (winner.value != '' || filledBox.value == 9) {
-      oRrefresh.value = true;
+      winner.value = 'Game Draw';
+      isRefreshNeeded.value = true;
+      headingText.value = "Game Draw";
       showReset();
-    } else {
-      oRrefresh.value = false;
     }
+  }
+
+  void checkForWinner() {
+    for (final combination in winningCombinations) {
+      if (checkWinner(combination)) {
+        winner.value = list[combination[0]];
+        matchedIndex.assignAll(combination);
+        isRefreshNeeded.value = true;
+        headingText.value = "${winner.value} won";
+        showReset();
+        break;
+      }
+    }
+  }
+
+  bool checkWinner(List<int> combination) {
+    return list[combination[0]] == list[combination[1]] &&
+        list[combination[0]] == list[combination[2]] &&
+        list[combination[0]] != '';
   }
 
   void showReset() {
-    Future.delayed(const Duration(seconds: 0)).then((value) {
-      Get.showSnackbar(GetSnackBar(
-        padding: const EdgeInsets.all(20),
-        title: "Game Over",
-        message: "reset to play again",
-        icon: const Icon(
-          Icons.refresh,
-          color: Colors.white,
-          size: 30,
-        ),
-        mainButton: MaterialButton(
-          onPressed: () {
-            Get.back(canPop: true);
-            resetGame();
-          },
-          textColor: Colors.white,
-          shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(10),
-              side: const BorderSide(color: Colors.white)),
-          child: const Padding(
-            padding: EdgeInsets.all(8.0),
-            child: Text("Reset"),
-          ),
-        ),
-        overlayBlur: 2.0,
-      ));
-    });
+    Get.dialog(
+      AlertDialog(
+        title: Text(headingText.value),
+        content: const Text("Want to play again?"),
+        actionsAlignment: MainAxisAlignment.center,
+        actionsPadding: const EdgeInsets.all(8.0),
+        actions: [
+          MaterialButton(
+            minWidth: Get.width * 0.5,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(10.0),
+            ),
+            color: Colors.blue,
+            onPressed: () {
+              resetGame();
+              Get.back();
+            },
+            child: const Text('Reset'),
+          )
+        ],
+      ),
+    );
   }
 
   void resetGame() {
-    list.clear();
-    var blank = <String>['', '', '', '', '', '', '', '', ''];
-    list.addAll(blank);
+    list.assignAll(List.filled(9, ''));
     oTurn.value = true;
     winner.value = '';
-    matchedIndex = [];
-    headingText.value = "";
+    matchedIndex.clear();
+    headingText.value = "O's Turn";
     filledBox.value = 0;
-    oRrefresh.value = false;
+    isRefreshNeeded.value = false;
   }
 }

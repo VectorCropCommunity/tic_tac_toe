@@ -15,26 +15,27 @@ class HomeView extends GetView<HomeController> {
         elevation: 0,
         backgroundColor: Colors.transparent,
         actions: [
-          Obx(
-            () => Container(
-              margin: const EdgeInsets.all(10),
-              child: IconButton(
-                onPressed: () {
-                  themeController.toggleTheme();
-                },
-                splashColor: Colors.transparent,
-                splashRadius: 1,
-                icon: !themeController.isLightTheme.value
-                    ? const Icon(
-                        Icons.light_mode,
-                      )
-                    : const Icon(
-                        Icons.dark_mode,
-                        color: Color.fromARGB(255, 245, 193, 23),
-                      ),
+          AnimatedContainer(
+            duration: const Duration(milliseconds: 1000),
+            curve: Curves.fastOutSlowIn,
+            margin: const EdgeInsets.all(10),
+            child: IconButton(
+              onPressed: () {
+                themeController.toggleTheme();
+              },
+              splashColor: Colors.transparent,
+              splashRadius: 1,
+              icon:
+                  //  !themeController.isLightTheme.value
+                  //     ? const Icon(
+                  //         Icons.light_mode,
+                  //       )
+                  const Icon(
+                Icons.dark_mode,
+                color: Color.fromARGB(255, 245, 193, 23),
               ),
             ),
-          )
+          ),
         ],
       ),
       extendBodyBehindAppBar: true,
