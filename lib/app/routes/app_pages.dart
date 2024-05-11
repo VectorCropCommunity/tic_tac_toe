@@ -4,6 +4,8 @@ import '../modules/game/bindings/game_binding.dart';
 import '../modules/game/views/game_view.dart';
 import '../modules/home/bindings/home_binding.dart';
 import '../modules/home/views/home_view.dart';
+import '../modules/online/bindings/online_binding.dart';
+import '../modules/online/views/online_view.dart';
 
 part 'app_routes.dart';
 
@@ -20,8 +22,13 @@ class AppPages {
     ),
     GetPage(
       name: _Paths.GAME,
-      page: () =>  GameView(),
+      page: () => GameView(),
       binding: GameBinding(),
+    ),
+    GetPage(
+      name: _Paths.ONLINE,
+      page: () => const OnlineView(),
+      binding: OnlineBinding(),
     ),
   ];
 }

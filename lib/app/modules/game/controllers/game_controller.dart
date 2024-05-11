@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:tic_tac_toe/app/modules/online/model/room_model.dart';
+import 'package:tic_tac_toe/main.dart';
 
 class GameController extends GetxController {
   RxBool oTurn = true.obs;
@@ -9,6 +11,9 @@ class GameController extends GetxController {
   RxString headingText = ''.obs;
   RxInt filledBox = 0.obs;
   RxBool isRefreshNeeded = false.obs;
+  RxString id = ''.obs;
+  Rxn<Game> game = Rxn<Game>();
+  RxBool isOnline = false.obs;
 
   final List<List<int>> winningCombinations = [
     [0, 1, 2], // Rows
@@ -23,9 +28,26 @@ class GameController extends GetxController {
 
   @override
   void onInit() {
-    headingText.value = oTurn.value ? "O's Turn" : "X's Turn";
     winner.value = '';
     super.onInit();
+  }
+
+  @override
+  void onReady() {
+    if (id.value != '') {
+      isOnline.value = true;
+      database.ref('rooms/$id/game').onValue.listen((event) {
+        debugPrint(event.snapshot.value.toString());
+        game.value = Game.fromJson(event.snapshot.value as Map);
+        print(game.value.toString());
+        game.value!.currentTurn == 'X'
+            ? {oTurn.value = true, headingText.value = "X's Turn"}
+            : {oTurn.value = false, headingText.value = "O's Turn"};
+      });
+    } else {
+      headingText.value = oTurn.value ? "O's Turn" : "X's Turn";
+    }
+    super.onReady();
   }
 
   @override
@@ -37,25 +59,46 @@ class GameController extends GetxController {
   }
 
   void onTapped(int index) {
-    // heading text
-    headingText.value = !oTurn.value ? "O's Turn" : "X's Turn";
-    if (winner.value == '' && filledBox.value != 9) {
-      if (oTurn.value && list[index] == '') {
-        list[index] = 'O';
-      } else if (!oTurn.value && list[index] == '') {
-        list[index] = 'X';
+    if (id.value != '') {
+      if (oTurn.value && game.value!.board[index] == '') {
+        game.value!.board[index] = 'X';
+        database.ref('rooms/$id/game').update({
+          "currentTurn": 'O',
+          'nextTurn': 'X',
+          'board': game.value!.board,
+        });
+      } else if (!oTurn.value && game.value!.board[index] == '') {
+        game.value!.board[index] = 'O';
+        database.ref('rooms/$id/game').update({
+          "currentTurn": 'X',
+          'nextTurn': 'O',
+          'board': game.value!.board,
+        });
       }
-      oTurn.value = !oTurn.value;
+
       filledBox++;
-    }
+    } else {
+      // heading text
+      headingText.value = !oTurn.value ? "O's Turn" : "X's Turn";
 
-    checkForWinner();
+      if (winner.value == '' && filledBox.value != 9) {
+        if (oTurn.value && list[index] == '') {
+          list[index] = 'O';
+        } else if (!oTurn.value && list[index] == '') {
+          list[index] = 'X';
+        }
+        oTurn.value = !oTurn.value;
+        filledBox++;
+      }
 
-    if (filledBox.value == 9 && winner.value == '') {
-      winner.value = 'Game Draw';
-      isRefreshNeeded.value = true;
-      headingText.value = "Game Draw";
-      showReset();
+      checkForWinner();
+
+      if (filledBox.value == 9 && winner.value == '') {
+        winner.value = 'Game Draw';
+        isRefreshNeeded.value = true;
+        headingText.value = "Game Draw";
+        showReset();
+      }
     }
   }
 
@@ -104,12 +147,23 @@ class GameController extends GetxController {
   }
 
   void resetGame() {
-    list.assignAll(List.filled(9, ''));
-    oTurn.value = true;
-    winner.value = '';
-    matchedIndex.clear();
-    headingText.value = "O's Turn";
-    filledBox.value = 0;
-    isRefreshNeeded.value = false;
+    if (!isOnline.value) {
+      list.assignAll(List.filled(9, ''));
+      oTurn.value = true;
+      winner.value = '';
+      matchedIndex.clear();
+      headingText.value = "O's Turn";
+      filledBox.value = 0;
+      isRefreshNeeded.value = false;
+    } else {
+      database.ref('rooms/$id/game').update({
+        "currentTurn": 'O',
+        'nextTurn': 'X',
+        'board': ['', '', '', '', '', '', '', '', ''],
+        'gameOver': false,
+        'draw': false,
+        'winner': 'nill',
+      });
+    }
   }
 }
