@@ -9,6 +9,12 @@ dependencies:
   cupertino_icons: ^1.0.2
   get: 4.6.6
   get_storage: 2.1.1
+  connectivity_plus: 6.0.3
+  firebase_core: 2.31.0
+  firebase_auth: 4.19.5
+  firebase_database: 10.5.5
+  confetti: 0.7.0
+  just_audio: 0.9.37
   flutter: 
     sdk: flutter
 
@@ -21,5 +27,6 @@ flutter:
   assets: 
     - assets/
     - assets/images/
+    - assets/audios/
   uses-material-design: true
 

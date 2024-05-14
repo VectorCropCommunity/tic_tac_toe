@@ -1,7 +1,13 @@
+import 'package:confetti/confetti.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:just_audio/just_audio.dart';
+import 'package:tic_tac_toe/assets.dart';
 
 class GameController extends GetxController {
+  final winnerAudioplayer = AudioPlayer();
+  final clickAudioPlayer = AudioPlayer();
+  ConfettiController confettiController = ConfettiController();
   RxBool oTurn = true.obs;
   RxString winner = ''.obs;
   List<String> list = List.filled(9, '').obs;
@@ -22,9 +28,12 @@ class GameController extends GetxController {
   ];
 
   @override
-  void onInit() {
+  Future<void> onInit() async {
     headingText.value = oTurn.value ? "O's Turn" : "X's Turn";
     winner.value = '';
+    await winnerAudioplayer.setAsset(AssetAudios.winner);
+    await clickAudioPlayer.setAsset(AssetAudios.click);
+    // player.setLoopMode(LoopMode.one);
     super.onInit();
   }
 
@@ -33,10 +42,11 @@ class GameController extends GetxController {
     if (Get.isSnackbarOpen) {
       Get.closeAllSnackbars();
     }
+    confettiController.dispose();
     super.onClose();
   }
 
-  void onTapped(int index) {
+  Future<void> onTapped(int index) async {
     // heading text
     headingText.value = !oTurn.value ? "O's Turn" : "X's Turn";
     if (winner.value == '' && filledBox.value != 9) {
@@ -45,9 +55,14 @@ class GameController extends GetxController {
       } else if (!oTurn.value && list[index] == '') {
         list[index] = 'X';
       }
+      // clickAudioPlayer.play();
+
       oTurn.value = !oTurn.value;
       filledBox++;
     }
+
+    // clickAudioPlayer.stop();
+    // clickAudioPlayer.setAsset(AssetAudios.click);
 
     checkForWinner();
 
@@ -55,18 +70,22 @@ class GameController extends GetxController {
       winner.value = 'Game Draw';
       isRefreshNeeded.value = true;
       headingText.value = "Game Draw";
-      showReset();
+      // showReset();
     }
   }
 
-  void checkForWinner() {
+  Future<void> checkForWinner() async {
     for (final combination in winningCombinations) {
       if (checkWinner(combination)) {
         winner.value = list[combination[0]];
         matchedIndex.assignAll(combination);
         isRefreshNeeded.value = true;
         headingText.value = "${winner.value} won";
-        showReset();
+        confettiController.play();
+        winnerAudioplayer.play();
+        await Future.delayed(const Duration
+        (seconds: 2));
+        confettiController.stop();
         break;
       }
     }
@@ -103,7 +122,9 @@ class GameController extends GetxController {
     );
   }
 
-  void resetGame() {
+  Future<void> resetGame() async {
+    winnerAudioplayer.stop();
+    winnerAudioplayer.setAsset(AssetAudios.winner);
     list.assignAll(List.filled(9, ''));
     oTurn.value = true;
     winner.value = '';
