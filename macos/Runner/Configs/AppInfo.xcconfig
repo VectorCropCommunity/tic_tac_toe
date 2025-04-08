@@ -11,4 +11,4 @@ PRODUCT_NAME = tic_tac_toe
 PRODUCT_BUNDLE_IDENTIFIER = com.vectorcrop.ticTacToe
 
 // The copyright displayed in application information
-PRODUCT_COPYRIGHT = Copyright © 2024 com.vectorcrop. All rights reserved.
+PRODUCT_COPYRIGHT = Copyright © 2025 com.vectorcrop. All rights reserved.

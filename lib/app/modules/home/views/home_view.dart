@@ -1,96 +1,77 @@
 import 'package:flutter/material.dart';
-
 import 'package:get/get.dart';
-import 'package:tic_tac_toe/app/routes/app_pages.dart';
-import 'package:tic_tac_toe/main.dart';
+import 'package:tic_tac_toe/app/controllers/theme_controller.dart';
 
-import '../controllers/home_controller.dart';
-
-class HomeView extends GetView<HomeController> {
+class HomeView extends GetView<ThemeController> {
   const HomeView({Key? key}) : super(key: key);
+
   @override
   Widget build(BuildContext context) {
+    // Access your ThemeController easily because it's already put into Get
+    final themeController = Get.find<ThemeController>();
+
     return Scaffold(
       appBar: AppBar(
-        elevation: 0,
-        backgroundColor: Colors.transparent,
+        title: const Text('Tic Tac Toe'),
+        backgroundColor: Theme.of(context).appBarTheme.backgroundColor,
         actions: [
-          AnimatedContainer(
-            duration: const Duration(milliseconds: 1000),
-            curve: Curves.fastOutSlowIn,
-            margin: const EdgeInsets.all(10),
-            child: IconButton(
-              onPressed: () {
-                themeController.toggleTheme();
-              },
-              splashColor: Colors.transparent,
-              splashRadius: 1,
-              icon:
-                  //  !themeController.isLightTheme.value
-                  //     ? const Icon(
-                  //         Icons.light_mode,
-                  //       )
-                  const Icon(
-                Icons.dark_mode,
-                color: Color.fromARGB(255, 245, 193, 23),
-              ),
-            ),
+          // Example: let user open a theme picker with an icon
+          IconButton(
+            icon: const Icon(Icons.color_lens),
+            onPressed: () {
+              Get.bottomSheet(
+                Container(
+                  padding: const EdgeInsets.all(16.0),
+                  decoration: BoxDecoration(
+                    color: Theme.of(context).scaffoldBackgroundColor,
+                    borderRadius: const BorderRadius.vertical(
+                      top: Radius.circular(16),
+                    ),
+                  ),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        'Choose Theme',
+                        style: TextStyle(
+                          fontSize: 20,
+                          color: Theme.of(context).textTheme.bodyLarge!.color,
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                      // Show a simple list or grid of theme options
+                      Wrap(
+                        spacing: 8,
+                        children: themeController.themes.keys.map((themeName) {
+                          return ElevatedButton(
+                            onPressed: () {
+                              themeController.switchTheme(themeName);
+                              Get.back(); // Close bottom sheet
+                            },
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: themeController
+                                  .themes[themeName]?.primaryColor,
+                            ),
+                            child: Text(themeName),
+                          );
+                        }).toList(),
+                      ),
+                    ],
+                  ),
+                ),
+              );
+            },
           ),
         ],
       ),
-      extendBodyBehindAppBar: true,
-      body: Stack(
-        fit: StackFit.expand,
-        children: [
-          const Image(
-            image: AssetImage('./assets/images/Cover.png'),
-            fit: BoxFit.cover,
-            height: double.infinity,
-            width: double.infinity,
+      body: Center(
+        child: Text(
+          'Welcome to Tic Tac Toe!',
+          style: TextStyle(
+            fontSize: 22,
+            color: Theme.of(context).textTheme.bodyLarge!.color,
           ),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.center,
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              const Image(
-                image: AssetImage("./assets/images/Logo.png"),
-                width: 200,
-              ),
-              const SizedBox(
-                height: 20,
-              ),
-              MaterialButton(
-                onPressed: () {
-                  Get.toNamed(Routes.GAME);
-                },
-                shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(10),
-                    side: const BorderSide(
-                        color: Colors.black, width: 3, strokeAlign: 1)),
-                color: Colors.yellow[800],
-                child: const Padding(
-                  padding: EdgeInsets.all(8.0),
-                  child: Text(
-                    "Play",
-                    style: TextStyle(
-                        color: Colors.white,
-                        fontWeight: FontWeight.bold,
-                        fontSize: 20),
-                  ),
-                ),
-              ),
-            ],
-          ),
-          const Align(
-            alignment: Alignment.bottomCenter,
-            child: Padding(
-              padding: EdgeInsets.all(20.0),
-              child: Text(
-                "vectorcrop.com",
-              ),
-            ),
-          )
-        ],
+        ),
       ),
     );
   }

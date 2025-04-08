@@ -1,53 +1,37 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:get_storage/get_storage.dart';
+import 'package:tic_tac_toe/app/data/theme_data.dart';
+
+// Make sure you import your newly defined themes: pinkTheme, greenTheme, etc.
 
 class ThemeController extends GetxController {
   final box = GetStorage();
-  var theme = "".obs;
-  final count = 0.obs;
+
+  // This will hold the name of the currently selected theme
+  var selectedThemeName = "".obs;
+
+  // Map of theme name to actual ThemeData object
+  final Map<String, ThemeData> themes = {
+    'Pink': pinkTheme,
+    'Green': greenTheme,
+    'Orange': orangeTheme,
+    'Blue': blueTheme,
+    'Light': lightTheme, // If you still have them
+    'Dark': darkTheme, // ...
+  };
 
   @override
   void onInit() {
-    theme.value = box.read("theme") ?? "light";
-    print(theme);
-
-    if (theme.value == "light") {
-      Get.changeThemeMode(ThemeMode.light);
-    } else {
-      Get.changeThemeMode(ThemeMode.dark);
-    }
-
     super.onInit();
+    selectedThemeName.value = box.read("theme") ?? "Pink";
+    Get.changeTheme(themes[selectedThemeName.value]!);
   }
 
-  @override
-  void onReady() {
-    print(theme);
-
-    super.onReady();
-  }
-
-  @override
-  void onClose() {
-    super.onClose();
-  }
-
-  void increment() => count.value++;
-
-  // Initially set to light
-
-  void toggleTheme() {
-    if (theme.value == "light") {
-      theme.value = "dark";
-      box.write('theme', 'dark');
-      Get.changeThemeMode(ThemeMode.dark);
-    } else {
-      theme.value = "light";
-      box.write('theme', 'light');
-      Get.changeThemeMode(ThemeMode.light);
-    }
-
-    print(theme.value);
+  // Switch the theme by name
+  void switchTheme(String themeName) {
+    selectedThemeName.value = themeName;
+    box.write('theme', themeName);
+    Get.changeTheme(themes[themeName]!);
   }
 }
