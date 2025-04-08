@@ -18,10 +18,6 @@ class AppPages {
       page: () => const HomeView(),
       binding: HomeBinding(),
     ),
-    GetPage(
-      name: _Paths.GAME,
-      page: () =>  GameView(),
-      binding: GameBinding(),
-    ),
+    GetPage(name: _Paths.GAME, page: () => GameView(), binding: GameBinding()),
   ];
 }

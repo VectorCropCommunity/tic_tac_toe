@@ -8,7 +8,7 @@ plugins {
 android {
     namespace = "com.vectorcrop.tic_tac_toe"
     compileSdk = flutter.compileSdkVersion
-    ndkVersion = flutter.ndkVersion
+    ndkVersion = "27.2.12479018"
 
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_11
@@ -29,15 +29,6 @@ android {
         versionCode = flutter.versionCode
         versionName = flutter.versionName
     }
-
-    signingConfigs {
-       release {
-           keyAlias 'upload'
-           keyPassword 'Shabeer'
-           storeFile '/Users/muhammedshabeerop/upload-keystore.jks'? file('/Users/muhammedshabeerop/upload-keystore.jks') : null
-           storePassword 'Shabeer'
-       }
-   }
 
     buildTypes {
         release {
