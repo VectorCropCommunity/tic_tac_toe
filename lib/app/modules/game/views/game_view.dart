@@ -17,322 +17,159 @@ class GameView extends GetResponsiveView<GameController> {
     return Obx(() {
       if (controller.isLoading.value) {
         return Scaffold(
-          backgroundColor: scheme.surface,
-          body: Center(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                const CircularProgressIndicator(),
-                const SizedBox(height: 20),
-                Text(
-                  "Loading Game...",
-                  style: TextStyle(fontSize: 16, color: scheme.onSurface),
-                ),
-              ],
+          body: Container(
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [
+                  scheme.primary.withOpacity(0.1),
+                  scheme.secondary.withOpacity(0.1),
+                ],
+              ),
             ),
-          ),
-        );
-      }
-
-      return Scaffold(
-        backgroundColor: scheme.surface,
-        appBar: AppBar(
-          backgroundColor: Colors.transparent,
-          elevation: 0,
-          actions: [
-            IconButton(
-              onPressed: controller.resetGame,
-              icon: Icon(Icons.refresh, color: scheme.onSurface),
-            ),
-          ],
-        ),
-        body: RefreshIndicator(
-          onRefresh: () async => controller.resetGame(),
-          child: SingleChildScrollView(
-            physics: const AlwaysScrollableScrollPhysics(),
-            child: SizedBox(
-              height: MediaQuery.of(Get.context!).size.height,
-              child: Stack(
+            child: Center(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
                 children: [
-                  Padding(
-                    padding: const EdgeInsets.all(16),
-                    child: Column(
-                      children: [
-                        // Player Turn Indicator
-                        Obx(
-                          () => AnimatedContainer(
-                            duration: const Duration(milliseconds: 300),
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 20,
-                              vertical: 12,
-                            ),
-                            decoration: BoxDecoration(
-                              color:
-                                  controller.oTurn.value
-                                      ? scheme.primaryContainer
-                                      : scheme.secondaryContainer,
-                              borderRadius: BorderRadius.circular(
-                                100,
-                              ), // 💊 pill shape
-                              boxShadow: [
-                                BoxShadow(
-                                  color: scheme.shadow.withOpacity(0.1),
-                                  blurRadius: 10,
-                                  offset: const Offset(0, 4),
-                                ),
-                              ],
-                            ),
-                            child: Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Text(
-                                  controller.oTurn.value ? "⭕" : "❌",
-                                  style: const TextStyle(
-                                    fontSize: 28,
-                                  ), // Emoji avatar
-                                ),
-                                const SizedBox(width: 12),
-                                Text(
-                                  controller.headingText.value,
-                                  style: TextStyle(
-                                    fontSize: 20,
-                                    fontWeight: FontWeight.bold,
-                                    color:
-                                        controller.oTurn.value
-                                            ? scheme.onPrimaryContainer
-                                            : scheme.onSecondaryContainer,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
-
-                        const SizedBox(height: 30),
-
-                        // Game Grid
-                        if (controller.isVsAI.value)
-                          Obx(() {
-                            final selected = controller.difficulty.value;
-                            final hasStarted = controller.hasGameStarted();
-                            final options = ['easy', 'medium', 'hard'];
-                            final labels = ['🟢 Easy', '🟠 Medium', '🔴 Hard'];
-
-                            return Wrap(
-                              spacing: 12,
-                              children: List.generate(options.length, (index) {
-                                final value = options[index];
-                                final label = labels[index];
-                                final isSelected = value == selected;
-
-                                return ChoiceChip(
-                                  label: Text(label),
-                                  selected: isSelected,
-                                  onSelected:
-                                      hasStarted
-                                          ? null // disable after game started
-                                          : (_) =>
-                                              controller.difficulty.value =
-                                                  value,
-                                  selectedColor:
-                                      Theme.of(
-                                        Get.context!,
-                                      ).colorScheme.primaryContainer,
-                                  labelStyle: TextStyle(
-                                    fontWeight: FontWeight.bold,
-                                    color:
-                                        isSelected
-                                            ? Theme.of(
-                                              Get.context!,
-                                            ).colorScheme.onPrimaryContainer
-                                            : Theme.of(
-                                              Get.context!,
-                                            ).colorScheme.onSurface,
-                                  ),
-                                  padding: const EdgeInsets.symmetric(
-                                    horizontal: 12,
-                                    vertical: 8,
-                                  ),
-                                  shape: StadiumBorder(),
-                                );
-                              }),
-                            );
-                          }),
-
-                        Expanded(
-                          child: GridView.builder(
-                            itemCount: 9,
-                            physics: const NeverScrollableScrollPhysics(),
-                            gridDelegate:
-                                const SliverGridDelegateWithFixedCrossAxisCount(
-                                  crossAxisCount: 3,
-                                  crossAxisSpacing: 10,
-                                  mainAxisSpacing: 10,
-                                ),
-                            itemBuilder: (context, index) {
-                              return Obx(() {
-                                final isMatched = controller.matchedIndex
-                                    .contains(index);
-                                final isTapped =
-                                    controller.tappedIndex.value == index;
-
-                                final bgColor =
-                                    isMatched
-                                        ? scheme.tertiaryContainer
-                                        : (index % 2 == 0
-                                            ? scheme.primaryContainer
-                                            : scheme.secondaryContainer);
-
-                                return TweenAnimationBuilder<double>(
-                                  tween: Tween(
-                                    begin: 1.0,
-                                    end: isTapped ? 1.1 : 1.0,
-                                  ),
-                                  duration: const Duration(milliseconds: 150),
-                                  curve: Curves.easeOutBack,
-                                  onEnd: () {
-                                    if (isTapped)
-                                      controller.tappedIndex.value = -1;
-                                  },
-                                  builder: (context, scale, child) {
-                                    return Transform.scale(
-                                      scale: scale,
-                                      child: child,
-                                    );
-                                  },
-                                  child: AnimatedContainer(
-                                    duration: const Duration(milliseconds: 300),
-                                    decoration: BoxDecoration(
-                                      color: bgColor,
-                                      borderRadius: BorderRadius.circular(6),
-                                      border: Border.all(
-                                        color: scheme.outlineVariant,
-                                        width: 1.5,
-                                      ),
-                                    ),
-                                    child: Material(
-                                      color: Colors.transparent,
-                                      borderRadius: BorderRadius.circular(6),
-                                      child: InkWell(
-                                        borderRadius: BorderRadius.circular(6),
-                                        splashColor: scheme.primary.withOpacity(
-                                          0.2,
-                                        ),
-                                        highlightColor: scheme.primary
-                                            .withOpacity(0.1),
-                                        onTap: () => controller.onTapped(index),
-                                        child: Center(
-                                          child: AnimatedSwitcher(
-                                            duration: const Duration(
-                                              milliseconds: 300,
-                                            ),
-                                            transitionBuilder: (
-                                              child,
-                                              animation,
-                                            ) {
-                                              final rotate = Tween(
-                                                begin: pi,
-                                                end: 0.0,
-                                              ).animate(animation);
-                                              return AnimatedBuilder(
-                                                animation: rotate,
-                                                child: child,
-                                                builder: (context, child) {
-                                                  final isUnder =
-                                                      (ValueKey(
-                                                            controller
-                                                                .list[index],
-                                                          ) !=
-                                                          child?.key);
-                                                  final tilt =
-                                                      isUnder
-                                                          ? min(
-                                                            rotate.value,
-                                                            pi / 2,
-                                                          )
-                                                          : rotate.value;
-                                                  return Transform(
-                                                    alignment: Alignment.center,
-                                                    transform:
-                                                        Matrix4.rotationY(tilt),
-                                                    child: child,
-                                                  );
-                                                },
-                                              );
-                                            },
-                                            child: Text(
-                                              controller.list[index],
-                                              key: ValueKey(
-                                                controller.list[index],
-                                              ), // important for switching
-                                              style: TextStyle(
-                                                fontSize: 48,
-                                                fontWeight: FontWeight.bold,
-                                                color:
-                                                    controller.list[index] ==
-                                                            'X'
-                                                        ? scheme
-                                                            .onPrimaryContainer
-                                                        : controller
-                                                                .list[index] ==
-                                                            'O'
-                                                        ? scheme
-                                                            .onSecondaryContainer
-                                                        : Colors.transparent,
-                                              ),
-                                            ),
-                                          ),
-                                        ),
-                                      ),
-                                    ),
-                                  ),
-                                );
-                              });
-                            },
-                          ),
-                        ),
-
-                        const SizedBox(height: 20),
-                        const Text(
-                          "vectorcrop.com",
-                          style: TextStyle(color: Colors.grey),
+                  Container(
+                    padding: const EdgeInsets.all(20),
+                    decoration: BoxDecoration(
+                      color: scheme.surface,
+                      borderRadius: BorderRadius.circular(20),
+                      boxShadow: [
+                        BoxShadow(
+                          color: scheme.shadow.withOpacity(0.1),
+                          blurRadius: 20,
+                          offset: const Offset(0, 8),
                         ),
                       ],
                     ),
-                  ),
-
-                  // Confetti
-                  Positioned.fill(
-                    child: Align(
-                      alignment: Alignment.topCenter,
-                      child: ConfettiWidget(
-                        confettiController: controller.confettiController,
-                        blastDirectionality: BlastDirectionality.explosive,
-                        shouldLoop: false,
-                        numberOfParticles: 40,
-                        maxBlastForce: 30,
-                        minBlastForce: 10,
-                        emissionFrequency: 0.05,
-                        gravity: 0.3,
-                        particleDrag: 0.05,
-                        colors: const [
-                          Colors.red,
-                          Colors.green,
-                          Colors.blue,
-                          Colors.orange,
-                          Colors.purple,
-                          Colors.pink,
-                          Colors.yellow,
-                        ],
-                        strokeWidth: 0,
-                        blastDirection: -pi / 2,
-                      ),
+                    child: Column(
+                      children: [
+                        CircularProgressIndicator(
+                          color: scheme.primary,
+                          strokeWidth: 3,
+                        ),
+                        const SizedBox(height: 16),
+                        Text(
+                          "Loading Game...",
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w600,
+                            color: scheme.onSurface,
+                          ),
+                        ),
+                      ],
                     ),
                   ),
                 ],
               ),
             ),
           ),
+        );
+      }
+
+      return Scaffold(
+        body: Stack(
+          children: [
+            // Main content
+            Container(
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [
+                    scheme.primary.withOpacity(0.05),
+                    scheme.secondary.withOpacity(0.05),
+                    scheme.tertiary.withOpacity(0.05),
+                  ],
+                ),
+              ),
+              child: SafeArea(
+                child: Column(
+                  children: [
+                    // Game Header
+                    _GameHeader(controller: controller, scheme: scheme),
+
+                    // Main Game Content
+                    Expanded(
+                      child: SingleChildScrollView(
+                        child: Padding(
+                          padding: const EdgeInsets.all(20),
+                          child: Column(
+                            children: [
+                              // Player Turn Indicator
+                              _PlayerTurnIndicator(
+                                controller: controller,
+                                scheme: scheme,
+                              ),
+
+                              const SizedBox(height: 30),
+
+                              // Difficulty Selector (for AI mode)
+                              if (controller.isVsAI.value)
+                                _DifficultySelector(
+                                  controller: controller,
+                                  scheme: scheme,
+                                ),
+
+                              if (controller.isVsAI.value)
+                                const SizedBox(height: 30),
+
+                              // Game Board
+                              _GameBoard(
+                                controller: controller,
+                                scheme: scheme,
+                              ),
+
+                              const SizedBox(height: 30),
+
+                              // Game Info/Stats
+                              _GameInfoPanel(
+                                controller: controller,
+                                scheme: scheme,
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+
+            // Confetti overlay
+            Positioned.fill(
+              child: Align(
+                alignment: Alignment.topCenter,
+                child: ConfettiWidget(
+                  confettiController: controller.confettiController,
+                  blastDirectionality: BlastDirectionality.explosive,
+                  shouldLoop: false,
+                  numberOfParticles: 50,
+                  maxBlastForce: 35,
+                  minBlastForce: 15,
+                  emissionFrequency: 0.05,
+                  gravity: 0.3,
+                  particleDrag: 0.05,
+                  colors: [
+                    scheme.primary,
+                    scheme.secondary,
+                    scheme.tertiary,
+                    Colors.red,
+                    Colors.green,
+                    Colors.blue,
+                    Colors.orange,
+                    Colors.purple,
+                  ],
+                  strokeWidth: 0,
+                  blastDirection: -pi / 2,
+                ),
+              ),
+            ),
+          ],
         ),
       );
     });
@@ -340,184 +177,417 @@ class GameView extends GetResponsiveView<GameController> {
 
   @override
   Widget? tablet() {
-    // TODO: implement tablet
-    return Scaffold(
-      appBar: AppBar(
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        actions: [
-          Container(
-            margin: const EdgeInsets.all(10),
-            child: IconButton(
-              onPressed: () {
-                controller.resetGame();
-              },
-              icon: const Icon(Icons.refresh),
-            ),
-          ),
-        ],
-      ),
-      body: Stack(
-        fit: StackFit.expand,
+    return phone(); // Use the same modern design for tablet
+  }
+
+  @override
+  Widget? desktop() {
+    return phone(); // Use the same modern design for desktop
+  }
+}
+
+// Game Header Component
+class _GameHeader extends StatelessWidget {
+  final GameController controller;
+  final ColorScheme scheme;
+
+  const _GameHeader({required this.controller, required this.scheme});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: Row(
-              children: [
-                // Player Selection
-                Expanded(
-                  child: Obx(
-                    () => GestureDetector(
-                      onTap: () {
-                        // controller.showReset();
-                      },
-                      child: AnimatedContainer(
-                        duration: const Duration(milliseconds: 1000),
-                        curve: Curves.bounceIn,
-                        width: double.infinity,
-                        margin: const EdgeInsets.all(8),
-                        decoration: BoxDecoration(
-                          shape: BoxShape.rectangle,
-                          color:
-                              controller.oTurn.value
-                                  ? Get.theme.primaryColorDark
-                                  : Get.theme.primaryColorLight,
-                          borderRadius: BorderRadius.circular(10),
-                        ),
-                        child: Center(
-                          child: Text(
-                            controller.headingText.value,
-                            style: const TextStyle(
-                              fontSize: 40,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        ),
+          // Back button and game info
+          Row(
+            children: [
+              Container(
+                decoration: BoxDecoration(
+                  color: scheme.surface,
+                  borderRadius: BorderRadius.circular(12),
+                  boxShadow: [
+                    BoxShadow(
+                      color: scheme.shadow.withOpacity(0.1),
+                      blurRadius: 8,
+                      offset: const Offset(0, 2),
+                    ),
+                  ],
+                ),
+                child: IconButton(
+                  icon: Icon(Icons.arrow_back, color: scheme.primary),
+                  onPressed: () => Get.back(),
+                ),
+              ),
+              const SizedBox(width: 12),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Tic Tac Toe',
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                      color: scheme.onSurface,
+                    ),
+                  ),
+                  Obx(
+                    () => Text(
+                      controller.isVsAI.value ? 'vs AI' : 'vs Player',
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: scheme.onSurface.withOpacity(0.6),
                       ),
                     ),
                   ),
-                ),
+                ],
+              ),
+            ],
+          ),
 
-                //Check Box
-                Expanded(
-                  child: GridView.builder(
-                    physics: const NeverScrollableScrollPhysics(),
-                    shrinkWrap: true,
-                    gridDelegate:
-                        const SliverGridDelegateWithFixedCrossAxisCount(
-                          crossAxisCount: 3,
-                        ),
-                    itemCount: 9,
-                    itemBuilder: (BuildContext context, int index) {
-                      return Obx(
-                        () => GestureDetector(
-                          onTap: () {
-                            controller.onTapped(index);
-                          },
-                          child: AnimatedContainer(
-                            duration: const Duration(seconds: 1),
-                            curve: Curves.bounceIn,
-                            margin: const EdgeInsets.all(8),
-                            decoration: BoxDecoration(
-                              shape: BoxShape.rectangle,
-                              color:
-                                  controller.list[index] == 'X'
-                                      ? Get.theme.primaryColorLight
-                                      : controller.list[index] == 'O'
-                                      ? Get.theme.primaryColorDark
-                                      : controller.matchedIndex.contains(index)
-                                      ? Colors.white.withOpacity(0.8)
-                                      : Colors.grey.withOpacity(0.3),
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                            child: Stack(
-                              fit: StackFit.expand,
-                              children: [
-                                Center(
-                                  child: Text(
-                                    controller.list[index],
-                                    style: TextStyle(
-                                      fontSize: 60,
-                                      fontWeight: FontWeight.bold,
-                                      color:
-                                          controller.list[index] == 'X'
-                                              ? Get.theme.primaryColorLight
-                                              : Get.theme.primaryColorDark,
-                                    ),
-                                  ),
-                                ),
-                                if (controller.matchedIndex.contains(index))
-                                  AnimatedContainer(
-                                    duration: const Duration(seconds: 1),
-                                    color: Colors.white.withOpacity(0.7),
-                                  ),
-                              ],
-                            ),
-                          ),
-                        ),
-                      );
-                    },
-                  ),
+          // Reset button
+          Container(
+            decoration: BoxDecoration(
+              color: scheme.surface,
+              borderRadius: BorderRadius.circular(12),
+              boxShadow: [
+                BoxShadow(
+                  color: scheme.shadow.withOpacity(0.1),
+                  blurRadius: 8,
+                  offset: const Offset(0, 2),
                 ),
               ],
+            ),
+            child: IconButton(
+              icon: Icon(Icons.refresh, color: scheme.primary),
+              onPressed: controller.resetGame,
+              tooltip: 'Reset Game',
             ),
           ),
         ],
       ),
     );
   }
+}
+
+// Player Turn Indicator Component
+class _PlayerTurnIndicator extends StatelessWidget {
+  final GameController controller;
+  final ColorScheme scheme;
+
+  const _PlayerTurnIndicator({required this.controller, required this.scheme});
 
   @override
-  Widget? desktop() {
-    return Scaffold(
-      appBar: AppBar(
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        actions: [
-          Container(
-            margin: const EdgeInsets.all(10),
-            child: IconButton(
-              onPressed: () {
-                controller.resetGame();
-              },
-              icon: const Icon(Icons.refresh),
+  Widget build(BuildContext context) {
+    return Obx(
+      () => Container(
+        padding: const EdgeInsets.all(20),
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors:
+                controller.oTurn.value
+                    ? [
+                      scheme.primaryContainer,
+                      scheme.primaryContainer.withOpacity(0.7),
+                    ]
+                    : [
+                      scheme.secondaryContainer,
+                      scheme.secondaryContainer.withOpacity(0.7),
+                    ],
+          ),
+          borderRadius: BorderRadius.circular(20),
+          boxShadow: [
+            BoxShadow(
+              color: (controller.oTurn.value
+                      ? scheme.primary
+                      : scheme.secondary)
+                  .withOpacity(0.3),
+              blurRadius: 20,
+              offset: const Offset(0, 8),
             ),
+          ],
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: Colors.white.withOpacity(0.2),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Text(
+                controller.oTurn.value ? "⭕" : "❌",
+                style: const TextStyle(fontSize: 32),
+              ),
+            ),
+            const SizedBox(width: 16),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    controller.headingText.value,
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                      color:
+                          controller.oTurn.value
+                              ? scheme.onPrimaryContainer
+                              : scheme.onSecondaryContainer,
+                    ),
+                  ),
+                  Text(
+                    controller.oTurn.value
+                        ? "Player O's Turn"
+                        : "Player X's Turn",
+                    style: TextStyle(
+                      fontSize: 14,
+                      color: (controller.oTurn.value
+                              ? scheme.onPrimaryContainer
+                              : scheme.onSecondaryContainer)
+                          .withOpacity(0.8),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// Difficulty Selector Component
+class _DifficultySelector extends StatelessWidget {
+  final GameController controller;
+  final ColorScheme scheme;
+
+  const _DifficultySelector({required this.controller, required this.scheme});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: scheme.surface,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: scheme.outline.withOpacity(0.2)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'AI Difficulty',
+            style: TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.w600,
+              color: scheme.onSurface,
+            ),
+          ),
+          const SizedBox(height: 12),
+          Obx(() {
+            final selected = controller.difficulty.value;
+            final hasStarted = controller.hasGameStarted();
+            final options = [
+              {'value': 'easy', 'label': '🟢 Easy', 'color': Colors.green},
+              {'value': 'medium', 'label': '🟠 Medium', 'color': Colors.orange},
+              {'value': 'hard', 'label': '🔴 Hard', 'color': Colors.red},
+            ];
+
+            return Row(
+              children:
+                  options.map((option) {
+                    final isSelected = option['value'] == selected;
+                    return Expanded(
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 4),
+                        child: Material(
+                          color: Colors.transparent,
+                          child: InkWell(
+                            onTap:
+                                hasStarted
+                                    ? null
+                                    : () =>
+                                        controller.difficulty.value =
+                                            option['value'] as String,
+                            borderRadius: BorderRadius.circular(12),
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(vertical: 12),
+                              decoration: BoxDecoration(
+                                color:
+                                    isSelected
+                                        ? scheme.primaryContainer
+                                        : scheme.surface,
+                                borderRadius: BorderRadius.circular(12),
+                                border: Border.all(
+                                  color:
+                                      isSelected
+                                          ? scheme.primary
+                                          : scheme.outline.withOpacity(0.2),
+                                  width: isSelected ? 2 : 1,
+                                ),
+                              ),
+                              child: Text(
+                                option['label'] as String,
+                                textAlign: TextAlign.center,
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  fontWeight:
+                                      isSelected
+                                          ? FontWeight.bold
+                                          : FontWeight.normal,
+                                  color:
+                                      isSelected
+                                          ? scheme.onPrimaryContainer
+                                          : scheme.onSurface,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                    );
+                  }).toList(),
+            );
+          }),
+        ],
+      ),
+    );
+  }
+}
+
+// Game Board Component
+class _GameBoard extends StatelessWidget {
+  final GameController controller;
+  final ColorScheme scheme;
+
+  const _GameBoard({required this.controller, required this.scheme});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: scheme.surface,
+        borderRadius: BorderRadius.circular(24),
+        boxShadow: [
+          BoxShadow(
+            color: scheme.shadow.withOpacity(0.1),
+            blurRadius: 20,
+            offset: const Offset(0, 8),
           ),
         ],
       ),
-      body: Stack(
-        fit: StackFit.expand,
-        children: [
-          Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: Row(
-              children: [
-                // Player Selection
-                Expanded(
-                  child: Obx(
-                    () => GestureDetector(
-                      onTap: () {
-                        // controller.showReset();
-                      },
-                      child: AnimatedContainer(
-                        duration: const Duration(milliseconds: 1000),
-                        curve: Curves.bounceIn,
-                        width: double.infinity,
-                        margin: const EdgeInsets.all(8),
-                        decoration: BoxDecoration(
-                          shape: BoxShape.rectangle,
-                          color:
-                              controller.oTurn.value
-                                  ? Get.theme.primaryColorDark
-                                  : Get.theme.primaryColorLight,
-                          borderRadius: BorderRadius.circular(10),
-                        ),
-                        child: Center(
+      child: AspectRatio(
+        aspectRatio: 1,
+        child: GridView.builder(
+          itemCount: 9,
+          physics: const NeverScrollableScrollPhysics(),
+          gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+            crossAxisCount: 3,
+            crossAxisSpacing: 12,
+            mainAxisSpacing: 12,
+          ),
+          itemBuilder: (context, index) {
+            return Obx(() {
+              final isMatched = controller.matchedIndex.contains(index);
+              final isTapped = controller.tappedIndex.value == index;
+              final cellValue = controller.list[index];
+
+              return TweenAnimationBuilder<double>(
+                tween: Tween(begin: 1.0, end: isTapped ? 0.95 : 1.0),
+                duration: const Duration(milliseconds: 150),
+                curve: Curves.easeOutBack,
+                onEnd: () {
+                  if (isTapped) controller.tappedIndex.value = -1;
+                },
+                builder: (context, scale, child) {
+                  return Transform.scale(scale: scale, child: child);
+                },
+                child: Container(
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                      colors:
+                          isMatched
+                              ? [
+                                scheme.tertiaryContainer,
+                                scheme.tertiaryContainer.withOpacity(0.8),
+                              ]
+                              : cellValue == 'X'
+                              ? [
+                                scheme.primaryContainer,
+                                scheme.primaryContainer.withOpacity(0.8),
+                              ]
+                              : cellValue == 'O'
+                              ? [
+                                scheme.secondaryContainer,
+                                scheme.secondaryContainer.withOpacity(0.8),
+                              ]
+                              : [
+                                scheme.surfaceVariant,
+                                scheme.surfaceVariant.withOpacity(0.8),
+                              ],
+                    ),
+                    borderRadius: BorderRadius.circular(16),
+                    border: Border.all(
+                      color:
+                          isMatched
+                              ? scheme.tertiary
+                              : scheme.outline.withOpacity(0.2),
+                      width: isMatched ? 3 : 1,
+                    ),
+                  ),
+                  child: Material(
+                    color: Colors.transparent,
+                    borderRadius: BorderRadius.circular(16),
+                    child: InkWell(
+                      borderRadius: BorderRadius.circular(16),
+                      onTap: () => controller.onTapped(index),
+                      child: Center(
+                        child: AnimatedSwitcher(
+                          duration: const Duration(milliseconds: 400),
+                          transitionBuilder: (child, animation) {
+                            final rotate = Tween(
+                              begin: pi,
+                              end: 0.0,
+                            ).animate(animation);
+                            return AnimatedBuilder(
+                              animation: rotate,
+                              child: child,
+                              builder: (context, child) {
+                                final isUnder =
+                                    (ValueKey(cellValue) != child?.key);
+                                final tilt =
+                                    isUnder
+                                        ? min(rotate.value, pi / 2)
+                                        : rotate.value;
+                                return Transform(
+                                  alignment: Alignment.center,
+                                  transform: Matrix4.rotationY(tilt),
+                                  child: child,
+                                );
+                              },
+                            );
+                          },
                           child: Text(
-                            controller.headingText.value,
-                            style: const TextStyle(
-                              fontSize: 40,
+                            cellValue,
+                            key: ValueKey(cellValue),
+                            style: TextStyle(
+                              fontSize: 42,
                               fontWeight: FontWeight.bold,
+                              color:
+                                  cellValue == 'X'
+                                      ? scheme.onPrimaryContainer
+                                      : cellValue == 'O'
+                                      ? scheme.onSecondaryContainer
+                                      : Colors.transparent,
                             ),
                           ),
                         ),
@@ -525,73 +595,120 @@ class GameView extends GetResponsiveView<GameController> {
                     ),
                   ),
                 ),
+              );
+            });
+          },
+        ),
+      ),
+    );
+  }
+}
 
-                //Check Box
-                Expanded(
-                  child: GridView.builder(
-                    physics: const NeverScrollableScrollPhysics(),
-                    shrinkWrap: true,
-                    gridDelegate:
-                        const SliverGridDelegateWithFixedCrossAxisCount(
-                          crossAxisCount: 3,
-                        ),
-                    itemCount: 9,
-                    itemBuilder: (BuildContext context, int index) {
-                      return Obx(
-                        () => GestureDetector(
-                          onTap: () {
-                            controller.onTapped(index);
-                          },
-                          child: AnimatedContainer(
-                            duration: const Duration(seconds: 1),
-                            curve: Curves.bounceIn,
-                            margin: const EdgeInsets.all(8),
-                            decoration: BoxDecoration(
-                              shape: BoxShape.rectangle,
-                              color:
-                                  controller.list[index] == 'X'
-                                      ? Get.theme.primaryColorLight
-                                      : controller.list[index] == 'O'
-                                      ? Get.theme.primaryColorDark
-                                      : controller.matchedIndex.contains(index)
-                                      ? Colors.white.withOpacity(0.8)
-                                      : Colors.grey.withOpacity(0.3),
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                            child: Stack(
-                              fit: StackFit.expand,
-                              children: [
-                                Center(
-                                  child: Text(
-                                    controller.list[index],
-                                    style: TextStyle(
-                                      fontSize: 60,
-                                      fontWeight: FontWeight.bold,
-                                      color:
-                                          controller.list[index] == 'X'
-                                              ? Get.theme.primaryColorLight
-                                              : Get.theme.primaryColorDark,
-                                    ),
-                                  ),
-                                ),
-                                if (controller.matchedIndex.contains(index))
-                                  AnimatedContainer(
-                                    duration: const Duration(seconds: 1),
-                                    color: Colors.white.withOpacity(0.7),
-                                  ),
-                              ],
-                            ),
-                          ),
-                        ),
-                      );
-                    },
-                  ),
-                ),
-              ],
+// Game Info Panel Component
+class _GameInfoPanel extends StatelessWidget {
+  final GameController controller;
+  final ColorScheme scheme;
+
+  const _GameInfoPanel({required this.controller, required this.scheme});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: scheme.surface,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: scheme.outline.withOpacity(0.1)),
+      ),
+      child: Column(
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+            children: [
+              _PlayerScore(
+                label: 'Player X',
+                icon: '❌',
+                score:
+                    '0', // You can connect this to actual scores if available
+                isActive: !controller.oTurn.value,
+                scheme: scheme,
+              ),
+              Container(
+                width: 1,
+                height: 40,
+                color: scheme.outline.withOpacity(0.2),
+              ),
+              _PlayerScore(
+                label: 'Player O',
+                icon: '⭕',
+                score:
+                    '0', // You can connect this to actual scores if available
+                isActive: controller.oTurn.value,
+                scheme: scheme,
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          Container(
+            padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
+            decoration: BoxDecoration(
+              color: scheme.primaryContainer.withOpacity(0.5),
+              borderRadius: BorderRadius.circular(20),
+            ),
+            child: Text(
+              'vectorcrop.com',
+              style: TextStyle(
+                fontSize: 12,
+                color: scheme.onSurface.withOpacity(0.6),
+                fontWeight: FontWeight.w500,
+              ),
             ),
           ),
         ],
       ),
+    );
+  }
+}
+
+class _PlayerScore extends StatelessWidget {
+  final String label;
+  final String icon;
+  final String score;
+  final bool isActive;
+  final ColorScheme scheme;
+
+  const _PlayerScore({
+    required this.label,
+    required this.icon,
+    required this.score,
+    required this.isActive,
+    required this.scheme,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: [
+        Text(icon, style: const TextStyle(fontSize: 24)),
+        const SizedBox(height: 4),
+        Text(
+          label,
+          style: TextStyle(
+            fontSize: 12,
+            fontWeight: FontWeight.w600,
+            color:
+                isActive ? scheme.primary : scheme.onSurface.withOpacity(0.6),
+          ),
+        ),
+        Text(
+          score,
+          style: TextStyle(
+            fontSize: 18,
+            fontWeight: FontWeight.bold,
+            color: isActive ? scheme.primary : scheme.onSurface,
+          ),
+        ),
+      ],
     );
   }
 }
