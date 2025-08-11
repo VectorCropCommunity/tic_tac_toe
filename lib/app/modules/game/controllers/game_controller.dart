@@ -24,6 +24,19 @@ class GameController extends GetxController {
   final RxBool isLoading = true.obs;
   final RxBool isVsAI = false.obs;
   final RxString difficulty = 'easy'.obs; // Default
+  // Score tracking
+  final RxInt xScore = 0.obs;
+  final RxInt oScore = 0.obs;
+  final RxInt drawScore = 0.obs;
+
+  // Player names
+  final RxString playerXName = 'Player X'.obs; // X marker owner
+  final RxString playerOName = 'Player O'.obs; // O marker owner
+  bool _namesAsked = false;
+
+  // Symbols (currently human = O starts first, AI = X second)
+  final String humanSymbol = 'O';
+  final String aiSymbol = 'X';
 
   bool hasGameStarted() => list.any((e) => e != '');
 
@@ -40,31 +53,52 @@ class GameController extends GetxController {
 
   @override
   Future<void> onInit() async {
-    isVsAI.value = Get.arguments?['vsAI'] ?? false;
-    headingText.value = "O's Turn";
-    winner.value = '';
-
-    // Show loading
+    // Start loading state
     isLoading.value = true;
+    try {
+      // Safely read arguments (may be null)
+      final args = Get.arguments as Map<String, dynamic>?;
+      isVsAI.value = (args?['vsAI'] as bool?) ?? false;
 
-    await Future.wait([
-      winnerAudioplayer.setAsset(AssetAudios.winner),
-      clickAudioPlayer.setAsset(AssetAudios.click),
-    ]);
+      headingText.value = "O's Turn";
+      winner.value = '';
+      isLoading.value = false; // Hide loader after assets are ready
 
-    shakeDetector = ShakeDetector.autoStart(
-      onPhoneShake: (event) {
-        if (isRefreshNeeded.value) {
-          resetGame();
-          if (Get.isDialogOpen!) Get.back();
-        }
-      },
-    );
+      // Set default AI name if needed
+      if (isVsAI.value) {
+        playerXName.value = 'AI';
+      }
 
-    // Done loading
-    isLoading.value = false;
+      // Ask for player name(s) after first frame
+      Future.delayed(Duration.zero, () => askForNamesIfNeeded());
 
-    super.onInit();
+      // Preload audio assets; if this fails we still proceed to show UI
+      // await Future.wait([
+      //   winnerAudioplayer.setAsset(AssetAudios.winner),
+      //   clickAudioPlayer.setAsset(AssetAudios.click),
+      // ]);
+
+      shakeDetector = ShakeDetector.autoStart(
+        onPhoneShake: (event) {
+          if (isRefreshNeeded.value) {
+            resetGame();
+            if (Get.isDialogOpen!) Get.back();
+          }
+        },
+      );
+    } catch (e, st) {
+      // Log & degrade gracefully (keep game playable even if audio fails)
+      debugPrint('GameController onInit error: $e\n$st');
+      Get.snackbar(
+        'Init Error',
+        'Some assets failed to load. Continuing without audio.',
+        snackPosition: SnackPosition.BOTTOM,
+        duration: const Duration(seconds: 3),
+      );
+    } finally {
+      isLoading.value = false; // Always hide loader
+      super.onInit();
+    }
   }
 
   @override
@@ -107,6 +141,7 @@ class GameController extends GetxController {
       winner.value = 'Game Draw';
       headingText.value = "Game Draw";
       isRefreshNeeded.value = true;
+      drawScore.value++;
       Future.delayed(const Duration(milliseconds: 500), showReset);
     }
 
@@ -125,6 +160,13 @@ class GameController extends GetxController {
         matchedIndex.assignAll(combination);
         isRefreshNeeded.value = true;
         headingText.value = "${winner.value} won";
+
+        // Update scores
+        if (winner.value == 'X') {
+          xScore.value++;
+        } else if (winner.value == 'O') {
+          oScore.value++;
+        }
 
         confettiController.play();
         if (isAudioOn.value) {
@@ -244,6 +286,106 @@ class GameController extends GetxController {
     isRefreshNeeded.value = false;
   }
 
+  /// Completely reset including scores
+  void resetAll() {
+    xScore.value = 0;
+    oScore.value = 0;
+    drawScore.value = 0;
+    resetGame();
+  }
+
+  void askForNamesIfNeeded() {
+    if (_namesAsked) return;
+    _namesAsked = true;
+    // If user already customized (e.g. coming back) skip
+    if (isVsAI.value) {
+      if (playerOName.value != 'Player O') return; // already set
+      _showNameDialog(singlePlayer: true);
+    } else {
+      if (playerOName.value != 'Player O' || playerXName.value != 'Player X')
+        return;
+      _showNameDialog(singlePlayer: false);
+    }
+  }
+
+  void _showNameDialog({required bool singlePlayer}) {
+    final scheme = Get.theme.colorScheme;
+    final oController = TextEditingController();
+    final xController = TextEditingController();
+    Get.dialog(
+      AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        backgroundColor: scheme.surface,
+        title: Text(
+          singlePlayer ? 'Enter your name' : 'Enter player names',
+          style: TextStyle(
+            fontWeight: FontWeight.bold,
+            color: scheme.onSurface,
+          ),
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            TextField(
+              controller: oController,
+              autofocus: true,
+              textInputAction:
+                  singlePlayer ? TextInputAction.done : TextInputAction.next,
+              decoration: InputDecoration(
+                labelText: singlePlayer ? 'Your name (O)' : 'Player O name',
+                border: const OutlineInputBorder(),
+              ),
+              onSubmitted: (_) {
+                if (singlePlayer) _submitNames(oController.text, null);
+              },
+            ),
+            if (!singlePlayer) const SizedBox(height: 12),
+            if (!singlePlayer)
+              TextField(
+                controller: xController,
+                textInputAction: TextInputAction.done,
+                decoration: const InputDecoration(
+                  labelText: 'Player X name',
+                  border: OutlineInputBorder(),
+                ),
+                onSubmitted:
+                    (_) => _submitNames(oController.text, xController.text),
+              ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () {
+              // Keep defaults
+              Get.back();
+            },
+            child: const Text('Skip'),
+          ),
+          ElevatedButton(
+            onPressed:
+                () => _submitNames(
+                  oController.text,
+                  singlePlayer ? null : xController.text,
+                ),
+            child: const Text('Start'),
+          ),
+        ],
+      ),
+      barrierDismissible: false,
+    );
+  }
+
+  void _submitNames(String oName, String? xName) {
+    if (oName.trim().isNotEmpty) playerOName.value = oName.trim();
+    if (isVsAI.value) {
+      // X is AI already named
+    } else {
+      if (xName != null && xName.trim().isNotEmpty)
+        playerXName.value = xName.trim();
+    }
+    if (Get.isDialogOpen!) Get.back();
+  }
+
   void makeAIMove() {
     // AI logic to make a move
 
@@ -289,14 +431,14 @@ class GameController extends GetxController {
     int? move;
 
     // 1. Try to win
-    move = _findBestMove(forPlayer: 'O');
+    move = _findBestMove(forPlayer: aiSymbol);
     if (move != null) {
       onTapped(move);
       return;
     }
 
     // 2. Block opponent
-    move = _findBestMove(forPlayer: 'X');
+    move = _findBestMove(forPlayer: humanSymbol);
     if (move != null) {
       onTapped(move);
       return;
@@ -339,7 +481,7 @@ class GameController extends GetxController {
 
     for (int i = 0; i < list.length; i++) {
       if (list[i] == '') {
-        list[i] = 'O';
+        list[i] = aiSymbol; // simulate AI move
         int score = _minimax(0, false);
         list[i] = '';
         if (score > bestScore) {
@@ -365,7 +507,7 @@ class GameController extends GetxController {
       int best = -1000;
       for (int i = 0; i < list.length; i++) {
         if (list[i] == '') {
-          list[i] = 'O';
+          list[i] = aiSymbol;
           best = max(best, _minimax(depth + 1, false));
           list[i] = '';
         }
@@ -375,7 +517,7 @@ class GameController extends GetxController {
       int best = 1000;
       for (int i = 0; i < list.length; i++) {
         if (list[i] == '') {
-          list[i] = 'X';
+          list[i] = humanSymbol;
           best = min(best, _minimax(depth + 1, true));
           list[i] = '';
         }
@@ -388,8 +530,8 @@ class GameController extends GetxController {
     for (final combo in winningCombinations) {
       final a = combo[0], b = combo[1], c = combo[2];
       if (list[a] == list[b] && list[b] == list[c] && list[a] != '') {
-        if (list[a] == 'O') return 10;
-        if (list[a] == 'X') return -10;
+        if (list[a] == aiSymbol) return 10;
+        if (list[a] == humanSymbol) return -10;
       }
     }
     return 0;

@@ -5,8 +5,7 @@ import '../controllers/game_controller.dart';
 class GameBinding extends Bindings {
   @override
   void dependencies() {
-    Get.lazyPut<GameController>(
-      () => GameController(),
-    );
+    // Not permanent so that each game session starts fresh (player names, mode)
+    Get.put(GameController());
   }
 }

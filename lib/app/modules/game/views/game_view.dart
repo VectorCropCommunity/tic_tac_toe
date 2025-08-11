@@ -234,7 +234,9 @@ class _GameHeader extends StatelessWidget {
                   ),
                   Obx(
                     () => Text(
-                      controller.isVsAI.value ? 'vs AI' : 'vs Player',
+                      controller.isVsAI.value
+                          ? 'vs AI'
+                          : '${controller.playerOName.value} vs ${controller.playerXName.value}',
                       style: TextStyle(
                         fontSize: 12,
                         color: scheme.onSurface.withOpacity(0.6),
@@ -262,7 +264,9 @@ class _GameHeader extends StatelessWidget {
             child: IconButton(
               icon: Icon(Icons.refresh, color: scheme.primary),
               onPressed: controller.resetGame,
-              tooltip: 'Reset Game',
+              tooltip: 'Reset current round',
+              // Long press full reset (scores + round)
+              onLongPress: controller.resetAll,
             ),
           ),
         ],
@@ -342,8 +346,8 @@ class _PlayerTurnIndicator extends StatelessWidget {
                   ),
                   Text(
                     controller.oTurn.value
-                        ? "Player O's Turn"
-                        : "Player X's Turn",
+                        ? "${controller.playerOName.value}'s Turn"
+                        : "${controller.playerXName.value}'s Turn",
                     style: TextStyle(
                       fontSize: 14,
                       color: (controller.oTurn.value
@@ -613,58 +617,58 @@ class _GameInfoPanel extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: scheme.surface,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: scheme.outline.withOpacity(0.1)),
-      ),
-      child: Column(
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-            children: [
-              _PlayerScore(
-                label: 'Player X',
-                icon: '❌',
-                score:
-                    '0', // You can connect this to actual scores if available
-                isActive: !controller.oTurn.value,
-                scheme: scheme,
-              ),
-              Container(
-                width: 1,
-                height: 40,
-                color: scheme.outline.withOpacity(0.2),
-              ),
-              _PlayerScore(
-                label: 'Player O',
-                icon: '⭕',
-                score:
-                    '0', // You can connect this to actual scores if available
-                isActive: controller.oTurn.value,
-                scheme: scheme,
-              ),
-            ],
-          ),
-          const SizedBox(height: 16),
-          Container(
-            padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
-            decoration: BoxDecoration(
-              color: scheme.primaryContainer.withOpacity(0.5),
-              borderRadius: BorderRadius.circular(20),
+    return Obx(
+      () => Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: scheme.surface,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: scheme.outline.withOpacity(0.1)),
+        ),
+        child: Column(
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              children: [
+                _PlayerScore(
+                  label: controller.playerXName.value,
+                  icon: '❌',
+                  score: controller.xScore.value.toString(),
+                  isActive: !controller.oTurn.value,
+                  scheme: scheme,
+                ),
+                Container(
+                  width: 1,
+                  height: 40,
+                  color: scheme.outline.withOpacity(0.2),
+                ),
+                _PlayerScore(
+                  label: controller.playerOName.value,
+                  icon: '⭕',
+                  score: controller.oScore.value.toString(),
+                  isActive: controller.oTurn.value,
+                  scheme: scheme,
+                ),
+              ],
             ),
-            child: Text(
-              'vectorcrop.com',
-              style: TextStyle(
-                fontSize: 12,
-                color: scheme.onSurface.withOpacity(0.6),
-                fontWeight: FontWeight.w500,
+            const SizedBox(height: 16),
+            Container(
+              padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
+              decoration: BoxDecoration(
+                color: scheme.primaryContainer.withOpacity(0.5),
+                borderRadius: BorderRadius.circular(20),
+              ),
+              child: Text(
+                'Draws: ${controller.drawScore.value}',
+                style: TextStyle(
+                  fontSize: 12,
+                  color: scheme.onSurface.withOpacity(0.6),
+                  fontWeight: FontWeight.w500,
+                ),
               ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
